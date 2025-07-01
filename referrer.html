@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referrer-Based Open Redirect Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #444;
+            font-size: 1.1em;
+        }
+        
+        input[type="url"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .link-container {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .link-container.has-link {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            border-color: #28a745;
+            border-style: solid;
+        }
+        
+        .generated-link {
+            display: none;
+            word-break: break-all;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+        
+        .test-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .test-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .placeholder-text {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 4px solid #fd7e14;
+        }
+        
+        .info-box h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .info-box p {
+            margin-bottom: 0;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Referrer Redirect Tester</h1>
+        <p class="subtitle">Generate controlled referrer links for open redirect testing</p>
+        
+        <div class="input-group">
+            <label for="targetUrl">Target URL:</label>
+            <input type="url" 
+                   id="targetUrl" 
+                   placeholder="https://target-site.com/redirect?url=https://evil.com"
+                   autocomplete="off">
+        </div>
+        
+        <div class="link-container" id="linkContainer">
+            <div class="generated-link" id="generatedLink"></div>
+            <div class="placeholder-text" id="placeholderText">
+                Enter a URL above to generate a test link
+            </div>
+            <a href="#" 
+               class="test-button" 
+               id="testButton" 
+               style="display: none;" 
+               target="_blank" 
+               rel="noopener">
+                🚀 Test Link (Opens in New Tab)
+            </a>
+        </div>
+        
+        <div class="info-box">
+            <h3>💡 How to Use</h3>
+            <p>
+                Enter the target URL you want to test for referrer-based open redirects. 
+                This tool will generate a link that, when clicked, will navigate to your target 
+                with this GitHub Pages site as the referrer. Perfect for testing applications 
+                that check the HTTP referrer header for redirect validation.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const targetUrlInput = document.getElementById('targetUrl');
+        const linkContainer = document.getElementById('linkContainer');
+        const generatedLink = document.getElementById('generatedLink');
+        const testButton = document.getElementById('testButton');
+        const placeholderText = document.getElementById('placeholderText');
+
+        function updateLink() {
+            const url = targetUrlInput.value.trim();
+            
+            if (url && isValidUrl(url)) {
+                generatedLink.textContent = url;
+                generatedLink.style.display = 'block';
+                testButton.href = url;
+                testButton.style.display = 'inline-block';
+                placeholderText.style.display = 'none';
+                linkContainer.classList.add('has-link');
+            } else {
+                generatedLink.style.display = 'none';
+                testButton.style.display = 'none';
+                placeholderText.style.display = 'block';
+                linkContainer.classList.remove('has-link');
+            }
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Update link as user types
+        targetUrlInput.addEventListener('input', updateLink);
+        
+        // Also update on paste
+        targetUrlInput.addEventListener('paste', () => {
+            setTimeout(updateLink, 10);
+        });
+
+        // Copy link functionality
+        generatedLink.addEventListener('click', () => {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(generatedLink.textContent).then(() => {
+                    const originalText = generatedLink.textContent;
+                    generatedLink.textContent = 'Copied to clipboard!';
+                    setTimeout(() => {
+                        generatedLink.textContent = originalText;
+                    }, 1500);
+                });
+            }
+        });
+
+        // Initialize
+        updateLink();
+    </script>
+</body>
+</html>
